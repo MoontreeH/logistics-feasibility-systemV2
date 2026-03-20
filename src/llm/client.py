@@ -31,7 +31,7 @@ class SiliconFlowClient:
         """
         self.api_key = api_key or os.getenv("SILICONFLOW_API_KEY")
         self.api_url = os.getenv("SILICONFLOW_API_URL", "https://api.siliconflow.cn/v1/chat/completions")
-        self.model = model or os.getenv("SILICONFLOW_MODEL", "deepseek-ai/DeepSeek-V3")
+        self.model = model or os.getenv("SILICONFLOW_MODEL", "deepseek-ai/DeepSeek-V3.2")
         
         if not self.api_key:
             raise ValueError("API密钥未设置，请设置SILICONFLOW_API_KEY环境变量")
