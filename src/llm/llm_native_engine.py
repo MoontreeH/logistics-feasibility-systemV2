@@ -235,9 +235,19 @@ class LLMMissionEngineV2:
                 return content
             return str(response)
         except Exception as e:
+            error_msg = str(e)
+            if "timeout" in error_msg.lower():
+                user_message = "抱歉，AI服务响应超时。这可能是因为网络原因或服务器繁忙。请稍后重试，或换一种方式描述您的需求。"
+            elif "429" in error_msg:
+                user_message = "抱歉，AI服务请求过于频繁。请稍后重试。"
+            elif "invalid" in error_msg.lower() or "401" in error_msg:
+                user_message = "抱歉，API密钥无效或已过期。请检查配置。"
+            else:
+                user_message = f"抱歉遇到了问题：{error_msg}，请换一种方式描述您的需求。"
+
             return json.dumps({
                 "intent": "error",
-                "response_message": f"抱歉遇到了问题：{str(e)}，请换一种方式描述您的需求。",
+                "response_message": user_message,
                 "next_action": "retry"
             })
 
