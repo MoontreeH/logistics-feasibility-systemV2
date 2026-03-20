@@ -1,0 +1,125 @@
+# LLM Prompt模板配置
+
+# 意图识别Prompt
+intent_classification: |
+  你是物流业务专家，需要判断用户的业务需求属于哪种类型。
+  
+  业务类型定义：
+  1. tob_enterprise (TOB企业购): 面向企业客户的批量采购业务，如办公用品、劳保用品、员工福利等。特点是订单批量大、常温保存、配送至写字楼/园区。
+  2. meal_delivery (餐配业务): 为餐厅、食堂供应食材的业务，包括生鲜蔬菜、肉禽蛋、冷冻品等。特点是高频次、小批量、需要冷链、时效要求高。
+  
+  请分析用户的描述，判断业务类型。如果无法确定，请标记为"uncertain"。
+  
+  用户描述：{user_input}
+  
+  请以JSON格式输出：
+  {{
+    "business_type": "tob_enterprise" | "meal_delivery" | "uncertain",
+    "confidence": 0.0-1.0,
+    "reasoning": "判断理由"
+  }}
+
+# 实体抽取Prompt
+entity_extraction: |
+  你是物流成本分析专家，需要从用户描述中提取关键业务参数。
+  
+  请从以下描述中提取参数，如果某参数未提及，设为null：
+  
+  用户描述：{user_input}
+  
+  需要提取的参数：
+  - scenario_name: 场景名称/客户名称（字符串）
+  - daily_order_count: 日订单数（整数）
+  - avg_items_per_order: 平均每单件数（整数）
+  - avg_weight_kg: 平均每单重量，单位公斤（数字）
+  - delivery_distance_km: 配送距离，单位公里（数字）
+  - need_upstairs: 是否需要上楼配送（布尔值）
+  - floor: 配送楼层（整数，如未提及设为1）
+  - has_elevator: 是否有电梯（布尔值）
+  - need_cold_chain: 是否需要冷链（布尔值）
+  - need_processing: 是否需要加工（布尔值）
+  - expected_return_rate: 预期退货率，如0.05表示5%（数字）
+  
+  请以JSON格式输出：
+  {{
+    "scenario_name": "...",
+    "daily_order_count": 数字或null,
+    "avg_items_per_order": 数字或null,
+    "avg_weight_kg": 数字或null,
+    "delivery_distance_km": 数字或null,
+    "need_upstairs": true/false/null,
+    "floor": 数字或null,
+    "has_elevator": true/false/null,
+    "need_cold_chain": true/false/null,
+    "need_processing": true/false/null,
+    "expected_return_rate": 数字或null,
+    "extracted_entities": ["已识别的参数列表"]
+  }}
+
+# 参数补全对话Prompt
+parameter_completion: |
+  你是物流业务顾问，正在帮助用户完善业务信息。
+  
+  已收集的参数：
+  {collected_params}
+  
+  缺失的关键参数：
+  {missing_params}
+  
+  请生成一个自然、友好的问题，询问用户缺失的参数。问题应该：
+  1. 简洁明了
+  2. 解释为什么需要这个信息
+  3. 提供示例帮助用户理解
+  
+  请直接输出问题文本，不要加引号。
+
+# 风险提示Prompt
+risk_analysis: |
+  你是物流风险评估专家，请根据以下业务参数分析潜在风险：
+  
+  业务参数：
+  {business_params}
+  
+  请识别以下类型的风险：
+  1. 操作风险：如上楼困难、无电梯、等待时间长等
+  2. 成本风险：如距离过远、单量过小、退货率高等
+  3. 服务风险：如时效要求高、冷链要求严格等
+  
+  请以JSON格式输出风险列表：
+  {{
+    "risks": [
+      {{
+        "type": "风险类型",
+        "description": "风险描述",
+        "severity": "high/medium/low",
+        "suggestion": "建议措施"
+      }}
+    ]
+  }}
+
+# 优化建议Prompt
+optimization_suggestions: |
+  你是物流成本优化专家，请根据成本结构提供优化建议。
+  
+  成本结构：
+  {cost_structure}
+  
+  业务参数：
+  {business_params}
+  
+  请提供3-5条具体的优化建议，建议应该：
+  1. 针对成本占比最高的环节
+  2. 可量化、可执行
+  3. 考虑业务实际情况
+  
+  请以JSON格式输出：
+  {{
+    "suggestions": [
+      {{
+        "category": "建议类别",
+        "description": "具体建议",
+        "potential_savings": "预计节省成本（百分比或金额）",
+        "priority": "high/medium/low"
+      }}
+    ]
+  }}

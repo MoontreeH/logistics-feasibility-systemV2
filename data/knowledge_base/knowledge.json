@@ -1,0 +1,132 @@
+{
+  "benchmark_tob_cost_per_order": {
+    "id": "benchmark_tob_cost_per_order",
+    "category": "industry_benchmark",
+    "title": "TOB企业购单均成本基准",
+    "content": "TOB企业购行业平均单均成本为50-80元，其中：订单处理占15-20%，运输配送占30-40%，末端交付占20-30%",
+    "source": "行业调研数据",
+    "business_type": "tob_enterprise",
+    "tags": [
+      "成本基准",
+      "TOB",
+      "单均成本"
+    ],
+    "created_at": "2026-03-19T16:18:39.983918",
+    "updated_at": "2026-03-19T16:18:39.983971",
+    "usage_count": 0
+  },
+  "benchmark_meal_cost_per_order": {
+    "id": "benchmark_meal_cost_per_order",
+    "category": "industry_benchmark",
+    "title": "餐配业务单均成本基准",
+    "content": "餐配业务行业平均单均成本为80-120元，其中：冷链成本占20-30%，运输配送占25-35%，库存持有占15-25%",
+    "source": "行业调研数据",
+    "business_type": "meal_delivery",
+    "tags": [
+      "成本基准",
+      "餐配",
+      "单均成本",
+      "冷链"
+    ],
+    "created_at": "2026-03-19T16:18:39.983990",
+    "updated_at": "2026-03-19T16:18:39.983992",
+    "usage_count": 0
+  },
+  "practice_route_optimization": {
+    "id": "practice_route_optimization",
+    "category": "best_practice",
+    "title": "配送路线优化最佳实践",
+    "content": "通过TMS系统优化配送路线，可减少10-15%的运输成本。关键措施：1)合并相近区域订单；2)设置合理时间窗口；3)提高装载率至85%以上",
+    "source": "物流优化案例库",
+    "business_type": null,
+    "tags": [
+      "运输优化",
+      "路线规划",
+      "降本"
+    ],
+    "created_at": "2026-03-19T16:18:39.983997",
+    "updated_at": "2026-03-19T16:18:39.983999",
+    "usage_count": 0
+  },
+  "practice_inventory_turnover": {
+    "id": "practice_inventory_turnover",
+    "category": "best_practice",
+    "title": "库存周转率提升方法",
+    "content": "将库存周转天数从7天降至5天，可减少25%的库存持有成本。方法：1)实施JIT配送；2)优化安全库存；3)提高需求预测准确性",
+    "source": "仓储管理最佳实践",
+    "business_type": null,
+    "tags": [
+      "库存优化",
+      "周转率",
+      "JIT"
+    ],
+    "created_at": "2026-03-19T16:18:39.984003",
+    "updated_at": "2026-03-19T16:18:39.984005",
+    "usage_count": 0
+  },
+  "risk_upstairs_delivery": {
+    "id": "risk_upstairs_delivery",
+    "category": "risk_case",
+    "title": "上楼配送成本风险",
+    "content": "某企业客户案例中，上楼配送占总成本的35%，其中无电梯楼宇的单均成本比有电梯楼宇高60%。建议：协商楼下交货或收取上楼费",
+    "source": "实际案例分析",
+    "business_type": "tob_enterprise",
+    "tags": [
+      "风险",
+      "上楼",
+      "末端交付"
+    ],
+    "created_at": "2026-03-19T16:18:39.984008",
+    "updated_at": "2026-03-19T16:18:39.984010",
+    "usage_count": 0
+  },
+  "risk_cold_chain_break": {
+    "id": "risk_cold_chain_break",
+    "category": "risk_case",
+    "title": "冷链断链风险",
+    "content": "餐配业务中，冷链断链导致的损耗率高达8-12%。全程温度监控可将损耗率降至3%以下。关键控制点：装车、运输、卸货",
+    "source": "质量管理案例",
+    "business_type": "meal_delivery",
+    "tags": [
+      "风险",
+      "冷链",
+      "损耗",
+      "温控"
+    ],
+    "created_at": "2026-03-19T16:18:39.984013",
+    "updated_at": "2026-03-19T16:18:39.984015",
+    "usage_count": 0
+  },
+  "tip_batch_processing": {
+    "id": "tip_batch_processing",
+    "category": "optimization_tip",
+    "title": "批量处理降本技巧",
+    "content": "推行波次拣选和批量订单处理，可将订单处理效率提升20%，人均处理行数从1000行/天提升至1200行/天",
+    "source": "运营优化经验",
+    "business_type": null,
+    "tags": [
+      "效率",
+      "批量处理",
+      "拣选"
+    ],
+    "created_at": "2026-03-19T16:18:39.984018",
+    "updated_at": "2026-03-19T16:18:39.984020",
+    "usage_count": 0
+  },
+  "tip_consolidation": {
+    "id": "tip_consolidation",
+    "category": "optimization_tip",
+    "title": "订单合并策略",
+    "content": "将同一客户的多张小单合并为一张大单配送，可减少30%的配送成本。建议设置最低起送量门槛",
+    "source": "配送优化案例",
+    "business_type": null,
+    "tags": [
+      "合并",
+      "配送",
+      "成本"
+    ],
+    "created_at": "2026-03-19T16:18:39.984024",
+    "updated_at": "2026-03-19T16:18:39.984026",
+    "usage_count": 0
+  }
+}

@@ -1,0 +1,261 @@
+# 物流成本费率配置
+# 基于业务文档中的9大环节成本模型
+
+# 业务类型定义
+business_types:
+  tob_enterprise: "TOB企业购"
+  meal_delivery: "餐配业务"
+
+# 1. 订单处理环节
+order_processing:
+  per_line:
+    description: "订单处理费-按行"
+    unit: "元/行"
+    rate: 2.5
+    source: "财务：处理人员月薪酬 ÷ 月订单行数"
+    applicable: ["tob_enterprise", "meal_delivery"]
+  
+  system_amortization:
+    description: "系统维护/摊销"
+    unit: "元/票"
+    rate: 1.0
+    source: "IT系统年度费用 ÷ 年总订单票数"
+    applicable: ["tob_enterprise", "meal_delivery"]
+    note: "若系统费用难以分割，可计入管理费"
+
+# 2. 库存持有环节
+inventory_holding:
+  capital_cost:
+    description: "资金占用成本"
+    unit: "年化率"
+    rate: 0.05
+    source: "公司平均融资成本"
+    applicable: ["tob_enterprise", "meal_delivery"]
+    note: "库存金额 × 资金成本率 ÷ 365"
+  
+  risk_cost:
+    description: "库存风险（损耗、过期）"
+    unit: "比例"
+    rate_tob: 0.005
+    rate_meal: 0.03
+    source: "历史损耗金额 ÷ 总库存金额"
+    applicable: ["tob_enterprise", "meal_delivery"]
+    note: "餐配生鲜损耗率高，需单独估算"
+  
+  warehouse_normal:
+    description: "常温仓储租金"
+    unit: "元/平米/天"
+    rate: 0.8
+    source: "财务：每月总仓租金 ÷ 面积 ÷ 30天"
+    applicable: ["tob_enterprise"]
+  
+  warehouse_cold:
+    description: "冷库仓储租金"
+    unit: "元/平米/天"
+    rate: 1.6
+    source: "冷库租金为常温2倍"
+    applicable: ["meal_delivery"]
+    note: "含能耗成本"
+
+# 3. 拣选作业环节
+picking:
+  normal:
+    description: "常温拣货"
+    unit: "元/件"
+    rate: 0.5
+    source: "运营：拣货员月薪 ÷ 月拣货件数"
+    applicable: ["tob_enterprise"]
+  
+  cold:
+    description: "冷库拣货"
+    unit: "元/件"
+    rate: 0.7
+    source: "估算：效率低，加损耗系数"
+    applicable: ["meal_delivery"]
+    note: "需穿防寒服，效率较低"
+
+# 4. 加工包装环节
+packaging:
+  normal_material:
+    description: "常温包装（纸箱、气泡膜）"
+    unit: "元/包"
+    rate: 2.0
+    source: "财务：纸箱采购均价"
+    applicable: ["tob_enterprise"]
+  
+  cold_material:
+    description: "冷链包装（泡沫箱+冰袋）"
+    unit: "元/包"
+    rate: 5.0
+    source: "财务：泡沫箱+冰袋+胶带"
+    applicable: ["meal_delivery"]
+    note: "冰袋用量可能因季节变化，取年均值"
+  
+  processing:
+    description: "生鲜加工（清洗、切割）"
+    unit: "元/公斤"
+    rate: 0.8
+    source: "加工人员薪酬 ÷ 总加工量"
+    applicable: ["meal_delivery"]
+    note: "若为净菜业务，需单独统计"
+
+# 5. 集货装车环节
+loading:
+  labor:
+    description: "装车人工"
+    unit: "元/工时"
+    rate: 25.0
+    source: "装卸工薪酬 ÷ 总装车工时"
+    applicable: ["tob_enterprise", "meal_delivery"]
+  
+  equipment:
+    description: "装车设备（地牛、传送带）"
+    unit: "元/小时"
+    rate: 5.0
+    source: "设备折旧 ÷ 总使用时长"
+    applicable: ["tob_enterprise", "meal_delivery"]
+    note: "若设备共用，可忽略或按比例分摊"
+
+# 6. 运输配送环节
+transportation:
+  normal_vehicle_fixed:
+    description: "自有常温车-固定成本"
+    unit: "元/天"
+    rate: 120.0
+    source: "车辆年固定成本（折旧、保险）÷ 365"
+    applicable: ["tob_enterprise"]
+    note: "按天分摊，再根据每趟占用天数计算"
+  
+  normal_vehicle_variable:
+    description: "自有常温车-变动成本"
+    unit: "元/公里"
+    rate: 3.5
+    source: "车队月度总燃油费 ÷ 总行驶里程"
+    applicable: ["tob_enterprise"]
+  
+  cold_vehicle_fixed:
+    description: "自有冷藏车-固定成本"
+    unit: "元/天"
+    rate: 200.0
+    source: "冷藏车年固定成本 ÷ 365"
+    applicable: ["meal_delivery"]
+    note: "含冷机折旧"
+  
+  cold_vehicle_variable:
+    description: "自有冷藏车-变动成本"
+    unit: "元/公里"
+    rate: 4.8
+    source: "估算：比常温高30%"
+    applicable: ["meal_delivery"]
+    note: "含冷机附加油耗"
+  
+  outsourcing:
+    description: "外包运输"
+    unit: "元/公里或元/趟"
+    rate: 4.0
+    source: "外包合同单价"
+    applicable: ["tob_enterprise", "meal_delivery"]
+    note: "明确是否包含油费、路桥、司机"
+
+# 7. 末端交付环节
+delivery:
+  unloading:
+    description: "卸货（常规）"
+    unit: "元/小时"
+    rate: 30.0
+    source: "司机或装卸工薪酬 ÷ 工时"
+    applicable: ["tob_enterprise", "meal_delivery"]
+  
+  upstairs:
+    description: "上楼/搬运"
+    unit: "元/层"
+    rate: 10.0
+    source: "市场行情或内部规定"
+    applicable: ["tob_enterprise"]
+    note: "可设定每层固定加价，或无电梯加价"
+  
+  no_elevator:
+    description: "无电梯附加费"
+    unit: "元/次"
+    rate: 50.0
+    source: "内部规定"
+    applicable: ["tob_enterprise"]
+    note: "写字楼无电梯情况"
+  
+  waiting:
+    description: "等待/预约超时"
+    unit: "元/小时"
+    rate: 35.0
+    source: "司机工时成本"
+    applicable: ["tob_enterprise", "meal_delivery"]
+    note: "需记录实际等待时间，模型可暂忽略"
+
+# 8. 逆向物流环节
+reverse_logistics:
+  return_transport:
+    description: "退货运输"
+    unit: "元/趟"
+    rate: 50.0
+    source: "同运输费率"
+    applicable: ["tob_enterprise", "meal_delivery"]
+    note: "逆向运输往往与正向合并，需分摊"
+  
+  inspection:
+    description: "退货检验/处理"
+    unit: "元/件"
+    rate: 2.0
+    source: "质检人员薪酬 ÷ 总处理退货件数"
+    applicable: ["tob_enterprise", "meal_delivery"]
+  
+  scrap_loss:
+    description: "报废损失"
+    unit: "比例"
+    rate_tob: 0.01
+    rate_meal: 0.05
+    source: "退货商品成本 × 报废率"
+    applicable: ["tob_enterprise", "meal_delivery"]
+    note: "餐配生鲜退货通常全损"
+
+# 9. 管理及间接费用分摊
+overhead:
+  warehouse_utilities:
+    description: "仓库水电费"
+    unit: "元/平米"
+    rate_normal: 0.1
+    rate_cold: 0.3
+    source: "总水电费 ÷ 总占用面积"
+    applicable: ["tob_enterprise", "meal_delivery"]
+    note: "冷库电费高，需单独核算"
+  
+  management:
+    description: "管理人员薪酬"
+    unit: "比例"
+    rate: 0.15
+    source: "管理薪酬总额 ÷ 直接人工总额"
+    applicable: ["tob_enterprise", "meal_delivery"]
+    note: "按各业务直接人工比例分摊"
+  
+  it_system:
+    description: "IT系统摊销"
+    unit: "元/票"
+    rate: 0.5
+    source: "总IT费用 ÷ 总订单数"
+    applicable: ["tob_enterprise", "meal_delivery"]
+    note: "若系统为多业务共用，按订单数分摊"
+
+# 可行性评级阈值
+feasibility_rating:
+  high:
+    min_margin: 0.15
+    description: "高可行性"
+    criteria: "毛利率≥15%，风险可控"
+  
+  medium:
+    min_margin: 0.08
+    description: "中可行性"
+    criteria: "毛利率8%-15%，需关注风险"
+  
+  low:
+    min_margin: 0
+    description: "低可行性"
+    criteria: "毛利率<8%，风险较高"
