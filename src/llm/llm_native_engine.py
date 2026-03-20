@@ -424,8 +424,15 @@ class LLMMissionEngineV2:
                 result = json.loads(self._extract_json(content))
             else:
                 result = json.loads(self._extract_json(str(response)))
-            return result.get("suggestions", [])
-        except:
+
+            suggestions = result.get("suggestions", [])
+            if isinstance(suggestions, list):
+                for item in suggestions:
+                    if not isinstance(item, dict):
+                        return []
+                return suggestions
+            return []
+        except Exception:
             return []
     
     def _build_response(self, parsed: Dict[str, Any]) -> Dict[str, Any]:
