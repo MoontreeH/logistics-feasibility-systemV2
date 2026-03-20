@@ -6,25 +6,25 @@
 
 import os
 import json
+import time
 import requests
 from typing import Dict, List, Optional, Any
 from dotenv import load_dotenv
 
-# 加载环境变量
 load_dotenv()
 
 
 class SiliconFlowClient:
     """
     硅基流动API客户端
-    
+
     支持DeepSeek-V3等模型，用于自然语言理解任务
     """
-    
+
     def __init__(self, api_key: str = None, model: str = None):
         """
         初始化客户端
-        
+
         Args:
             api_key: API密钥，默认从环境变量读取
             model: 模型名称，默认从环境变量读取
@@ -32,15 +32,17 @@ class SiliconFlowClient:
         self.api_key = api_key or os.getenv("SILICONFLOW_API_KEY")
         self.api_url = os.getenv("SILICONFLOW_API_URL", "https://api.siliconflow.cn/v1/chat/completions")
         self.model = model or os.getenv("SILICONFLOW_MODEL", "deepseek-ai/DeepSeek-V3.2")
-        
+        self.max_retries = 3
+        self.retry_delay = 2
+
         if not self.api_key:
             raise ValueError("API密钥未设置，请设置SILICONFLOW_API_KEY环境变量")
-        
+
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
-    
+
     def chat_completion(
         self,
         messages: List[Dict[str, str]],
@@ -49,14 +51,14 @@ class SiliconFlowClient:
         response_format: Optional[Dict] = None
     ) -> Dict[str, Any]:
         """
-        调用对话补全API
-        
+        调用对话补全API（带重试机制）
+
         Args:
             messages: 消息列表，格式为 [{"role": "user", "content": "..."}]
             temperature: 温度参数，控制随机性（0-2）
             max_tokens: 最大生成token数
             response_format: 响应格式，如 {"type": "json_object"}
-        
+
         Returns:
             API响应结果
         """
@@ -66,22 +68,35 @@ class SiliconFlowClient:
             "temperature": temperature,
             "max_tokens": max_tokens
         }
-        
+
         if response_format:
             payload["response_format"] = response_format
-        
-        try:
-            response = requests.post(
-                self.api_url,
-                headers=self.headers,
-                json=payload,
-                timeout=60
-            )
-            response.raise_for_status()
-            return response.json()
-        
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"API调用失败: {str(e)}")
+
+        last_error = None
+        for attempt in range(self.max_retries):
+            try:
+                response = requests.post(
+                    self.api_url,
+                    headers=self.headers,
+                    json=payload,
+                    timeout=(10, 120)
+                )
+                response.raise_for_status()
+                return response.json()
+
+            except requests.exceptions.Timeout as e:
+                last_error = f"API调用超时（尝试 {attempt + 1}/{self.max_retries}）"
+                if attempt < self.max_retries - 1:
+                    time.sleep(self.retry_delay)
+                continue
+
+            except requests.exceptions.RequestException as e:
+                last_error = f"API调用失败: {str(e)}"
+                if "429" in str(e):
+                    time.sleep(5)
+                continue
+
+        raise Exception(f"{last_error}，请检查网络或API密钥")
     
     def extract_json_from_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -112,15 +127,15 @@ class SiliconFlowClient:
     def test_connection(self) -> bool:
         """
         测试API连接
-        
+
         Returns:
             连接是否成功
         """
         try:
             messages = [
-                {"role": "user", "content": "你好，这是一个测试消息，请回复'连接成功'"}
+                {"role": "user", "content": "你好，请回复'连接成功'"}
             ]
-            response = self.chat_completion(messages, max_tokens=50)
+            response = self.chat_completion(messages, max_tokens=20, temperature=0)
             return "choices" in response
         except Exception as e:
             print(f"连接测试失败: {e}")
