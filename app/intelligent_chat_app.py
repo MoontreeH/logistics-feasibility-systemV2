@@ -383,9 +383,17 @@ def main():
                 if personalized:
                     advice_text = "\n\n## 💡 个性化建议"
                     for i, advice in enumerate(personalized, 1):
-                        advice_text += f"\n\n**{i}. {advice.get('action', '建议')}"
-                        advice_text += f"\n   - 预期效果: {advice.get('savings', '待评估')}"
-                        advice_text += f"\n   - 实施难度: {advice.get('difficulty', '未知')}"
+                        if isinstance(advice, dict):
+                            action = advice.get('action', '优化建议')
+                            savings = advice.get('savings', '待评估')
+                            difficulty = advice.get('difficulty', '未知')
+                        else:
+                            action = str(advice)
+                            savings = '待评估'
+                            difficulty = '未知'
+                        advice_text += f"\n\n**{i}. {action}"
+                        advice_text += f"\n   - 预期效果: {savings}"
+                        advice_text += f"\n   - 实施难度: {difficulty}"
                     add_message("assistant", advice_text)
 
                 add_message("assistant",
