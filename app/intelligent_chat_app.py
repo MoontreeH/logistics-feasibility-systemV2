@@ -255,6 +255,47 @@ def format_profit_result(result: dict) -> str:
     return "\n".join(lines)
 
 
+def build_data_summary(data: dict) -> str:
+    """构建数据摘要供用户确认"""
+    lines = [
+        "\n## 📋 信息确认",
+        "",
+        "已识别到以下信息：",
+    ]
+
+    items = data.get("items_per_order")
+    weight = data.get("weight_per_item_kg")
+    distance = data.get("distance_km")
+    order_type = data.get("order_type", "不确定")
+    purchase_price = data.get("purchase_price")
+    selling_price = data.get("selling_price")
+    need_upstairs = data.get("need_upstairs", False)
+    need_cold_chain = data.get("need_cold_chain", False)
+    floor = data.get("floor", 1)
+
+    if items:
+        lines.append(f"- **订单数量**: {items}件")
+    if weight:
+        lines.append(f"- **单件重量**: {weight}kg")
+    if distance:
+        lines.append(f"- **配送距离**: {distance}km")
+    lines.append(f"- **订单类型**: {order_type}")
+
+    if need_upstairs:
+        lines.append(f"- **上楼需求**: 需要上{floor}楼")
+    if need_cold_chain:
+        lines.append(f"- **冷链需求**: 需要")
+
+    if purchase_price and selling_price:
+        lines.append(f"- **采购价**: ¥{purchase_price}")
+        lines.append(f"- **售价**: ¥{selling_price}")
+
+    lines.append("")
+    lines.append("参与计算的环节：订单处理 → 拣选 → 包装 → 运输 → 末端配送")
+
+    return "\n".join(lines)
+
+
 def main():
     """主函数"""
     init_session_state()
@@ -361,10 +402,34 @@ def main():
 
         has_minimal_data = data.get("items_per_order") and data.get("distance_km")
 
-        should_calculate = has_minimal_data or (next_action == "calculate" and has_minimal_data)
+        if "pending_confirmation" not in st.session_state:
+            st.session_state.pending_confirmation = False
+        if "confirmed_data" not in st.session_state:
+            st.session_state.confirmed_data = None
 
-        if should_calculate:
-            calc_result = perform_cost_calculation(context)
+        should_calculate = False
+
+        if st.session_state.pending_confirmation and user_input in ["确认", "是", "好的", "确认计算", "y", "yes"]:
+            st.session_state.pending_confirmation = False
+            st.session_state.confirmed_data = data
+            should_calculate = True
+        elif st.session_state.pending_confirmation:
+            st.session_state.pending_confirmation = False
+            add_message("assistant", "已取消计算，如有需要请重新描述。")
+            st.rerun()
+        elif has_minimal_data and next_action != "ask":
+            summary = build_data_summary(data)
+            add_message("assistant", summary + "\n\n请确认以上信息是否正确？回复「确认」开始计算，或补充其他信息。")
+            st.session_state.pending_confirmation = True
+            st.session_state.confirmed_data = data
+            st.rerun()
+        else:
+            add_message("assistant", response.get("message"))
+
+        if should_calculate and st.session_state.confirmed_data:
+            data = st.session_state.confirmed_data
+            confirmed_context = {"collected_data": data}
+            calc_result = perform_cost_calculation(confirmed_context)
 
             if calc_result.get("success"):
                 cost_result = calc_result.get("result")
@@ -372,29 +437,27 @@ def main():
                 result_text = format_cost_result(cost_result)
                 add_message("assistant", result_text, "table")
 
-                data = context.get("collected_data", {})
                 if data.get("purchase_price") and data.get("selling_price"):
-                    profit_result = perform_profit_analysis(context, cost_result)
+                    profit_result = perform_profit_analysis(confirmed_context, cost_result)
                     if profit_result:
                         profit_text = format_profit_result(profit_result)
                         add_message("assistant", profit_text, "table")
 
                 personalized = response.get("personalized_advice", [])
-                if personalized:
-                    advice_text = "\n\n## 💡 个性化建议"
-                    for i, advice in enumerate(personalized, 1):
-                        if isinstance(advice, dict):
+                if personalized and isinstance(personalized, list):
+                    advice_lines = ["\n\n## 💡 个性化建议"]
+                    valid_count = 0
+                    for advice in personalized:
+                        if isinstance(advice, dict) and 'action' in advice:
+                            valid_count += 1
                             action = advice.get('action', '优化建议')
                             savings = advice.get('savings', '待评估')
                             difficulty = advice.get('difficulty', '未知')
-                        else:
-                            action = str(advice)
-                            savings = '待评估'
-                            difficulty = '未知'
-                        advice_text += f"\n\n**{i}. {action}"
-                        advice_text += f"\n   - 预期效果: {savings}"
-                        advice_text += f"\n   - 实施难度: {difficulty}"
-                    add_message("assistant", advice_text)
+                            advice_lines.append(f"\n\n**{valid_count}. {action}")
+                            advice_lines.append(f"\n   - 预期效果: {savings}")
+                            advice_lines.append(f"\n   - 实施难度: {difficulty}")
+                    if valid_count > 0:
+                        add_message("assistant", "".join(advice_lines))
 
                 add_message("assistant",
                     "\n\n💡 **提示**：您可以继续询问其他问题，或上传文件获取更多数据。")
